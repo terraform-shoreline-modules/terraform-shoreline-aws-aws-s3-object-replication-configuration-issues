@@ -1,0 +1,130 @@
+{
+  "name": "issues_with_amazon_s3_object_replication_configuration",
+  "description": "This incident type involves issues with replicating objects in Amazon S3 buckets after configuring replication. Replication issues can be caused by various factors, such as incorrect bucket ARN, incorrect key name prefix, suspended versioning, and missing permissions. Troubleshooting tips involve checking the replication status, verifying configuration settings, and ensuring that necessary permissions are granted. Replication time can also vary depending on the object size and source-destination region pair.",
+  "params": [
+    {
+      "name": "DESTINATION_BUCKET_NAME",
+      "value": ""
+    },
+    {
+      "name": "OBJECT_KEY",
+      "value": ""
+    },
+    {
+      "name": "BUCKET_NAME",
+      "value": ""
+    },
+    {
+      "name": "DESTINATION_BUCKET_ARN",
+      "value": ""
+    },
+    {
+      "name": "REPLICATION_ROLE_ARN",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Issues with Amazon S3 Object Replication Configuration\nThis incident type involves issues with replicating objects in Amazon S3 buckets after configuring replication. Replication issues can be caused by various factors, such as incorrect bucket ARN, incorrect key name prefix, suspended versioning, and missing permissions. Troubleshooting tips involve checking the replication status, verifying configuration settings, and ensuring that necessary permissions are granted. Replication time can also vary depending on the object size and source-destination region pair."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check replication status of a specific object"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api head-object --bucket ${BUCKET_NAME} --key ${OBJECT_KEY} --query \"ReplicationStatus\"`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## List all versions of an object"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api list-object-versions --bucket ${BUCKET_NAME} --prefix ${OBJECT_KEY}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## List all replication configurations for a bucket"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api get-bucket-replication --bucket ${BUCKET_NAME}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if versioning is enabled for a bucket"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api get-bucket-versioning --bucket ${BUCKET_NAME}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Get bucket policy for a specific bucket"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api get-bucket-policy --bucket ${BUCKET_NAME}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if a specific bucket policy statement grants s3:ObjectOwnerOverrideToBucketOwner permission"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `aws s3api get-bucket-policy --bucket ${DESTINATION_BUCKET_NAME} | jq -r '.Policy' | jq 'select(.Statement[] | select(.Effect == \"Allow\" and .Action == \"s3:ObjectOwnerOverrideToBucketOwner\"))'`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Update or Verify that the ARN of the destination bucket is correct in the replication configuration on the source bucket."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_set_bucket_replication($BUCKET_NAME, $DESTINATION_BUCKET_ARN, $REPLICATION_ROLE_ARN)"
+    }
+  ]
+}
